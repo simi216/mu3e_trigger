@@ -1,6 +1,4 @@
 name: mu3e_trigger
-description: Environment for Mu3e Trigger project
-version: 0.1.0
 
 channels:
   - conda-forge
@@ -15,15 +13,17 @@ channels:
 
 dependencies:
   - python=3.10
-  - keras
-  - numpy
-  - pandas
-  - scikit-learn
-  - scikit-image
-  - matplotlib
-  - pytorch
-  - hydra-core
-  - omegaconf
-  - ipykernel
-  - tensorflow
-  - pydot
+  - pip
+  - pip:
+    - keras
+    - numpy
+    - pandas
+    - scikit-learn
+    - scikit-image
+    - matplotlib
+    - torch
+    - hydra-core
+    - omegaconf
+    - ipykernel
+    - tensorflow
+    - pydot
