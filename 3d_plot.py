@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
 
 
 DATA_DIR = "mu3e_trigger_data"
@@ -10,16 +12,7 @@ max_barrel_radius = 86.3
 max_endcap_distance = 372.6
 
 signal_data = np.load(SIGNAL_DATA_FILE)
-background_data = np.load(BACKGROUND_DATA_FILE)
-
-background_data[background_data[:,:,0] != -1, 0] /= max_barrel_radius
-background_data[background_data[:,:,0] != -1, 1] /= max_barrel_radius
-background_data[background_data[:,:,0] != -1, 2] /= max_endcap_distance
-
-signal_data[signal_data[:,:,0] != -1, 0] /= max_barrel_radius
-signal_data[signal_data[:,:,0] != -1, 1] /= max_barrel_radius
-signal_data[signal_data[:,:,0] != -1, 2] /= max_endcap_distance
-
+bg_data_positions = np.load(BACKGROUND_DATA_FILE)
 
 def validate_user_input(user_input, data_shape):
     """Validate the event index against the data shape."""
@@ -28,31 +21,29 @@ def validate_user_input(user_input, data_shape):
     event_index = int(user_input)
     return 0 <= event_index < data_shape[0]
 
-def main():
+user_input = input("Enter the event index to plot: ")
+while(validate_user_input(user_input, signal_data.shape) is False):
+    print(f"Invalid event index. Please enter a number between 0 and {signal_data.shape[0] - 1}.")
     user_input = input("Enter the event index to plot: ")
-    while(validate_user_input(user_input, signal_data.shape) is False):
-        print(f"Invalid event index. Please enter a number between 0 and {signal_data.shape[0] - 1}.")
-        user_input = input("Enter the event index to plot: ")
-    
-    event_index = int(user_input)
-    # Plot a 3D scatter plot for one event
-    event_location = background_data[event_index]
 
-    # Filter out padding values
-    valid_mask = ~(event_location == -1).any(axis=-1)
-    event_location = event_location[valid_mask]
+event_index = int(user_input)
+# Plot a 3D scatter plot for one event
+x, y,z  = bg_data_positions[:event_index, :, 0], bg_data_positions[:event_index, :, 1], bg_data_positions[:event_index, :, 2]
+fig = plt.figure(figsize=(10, 9))
+ax = plt.axes(projection='3d')
+sc = ax.scatter3D(x, y, z, c="blue", marker="o")
+ax.set_xlabel("X Coordinate")
+ax.set_ylabel("Y Coordinate")
+ax.set_zlabel("Z Coordinate")
+ax.set_title("3D Scatter Plot of Background Data")
 
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection='3d')
+# Enable rotation and zoom
+def on_move(event):
+    if event.button == 1:  # Left mouse button for rotation
+        ax.view_init(elev=ax.elev + event.ydata * 0.1, azim=ax.azim + event.xdata * 0.1)
+    elif event.button == 3:  # Right mouse button for zoom
+        ax.dist += event.ydata * 0.01
+    fig.canvas.draw_idle()
 
-    ax.scatter(event_location[:, 0], event_location[:, 1], event_location[:, 2], c='b', marker='o')
-
-    ax.set_xlabel('X Coordinate')
-    ax.set_ylabel('Y Coordinate')
-    ax.set_zlabel('Z Coordinate')
-    ax.set_title(f'3D Plot of Event {event_index}')
-
-    plt.show()
-
-if __name__ == "__main__":
-    main()
+fig.canvas.mpl_connect('motion_notify_event', on_move)
+plt.show()
